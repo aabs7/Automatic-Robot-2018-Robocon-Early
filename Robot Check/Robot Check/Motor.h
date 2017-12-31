@@ -108,9 +108,9 @@ class Motor
 {
 
      private:
-			
+		uint8_t num;	
      public:
-		uint8_t num;
+		
 		Motor(uint8_t no){
 			num = no;
 			InitPWM();

@@ -6,19 +6,33 @@
  */ 
 
 
+
+/********************TO DO / TO SEE***********************
+ENCODER X AND ENCODER Y CAN ONLY CALCULATE UPTO 29 m distance due to count_encoder being 'int' data type'
+*/////////////////////////////////////////////////////////
+
+
 #ifndef ENCODER_H_
 #define ENCODER_H_
 
+
+#define encoderdiameter 58
+#define encoderPPR		 200
+
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
+
 
 class encoder
 {
 	private:
 		int count_encoder;
 		int speed;
-	public:
 		
+		
+	public:
+		float distance;
 		encoder()
 		{
 			
@@ -36,8 +50,10 @@ class encoder
 			speed = count_encoder;
 			count_encoder = 0;
 			};
+		float getdistance();
+		float getinstdistance();
+		int getcount(){return count_encoder;};
 		inline int getspeed(){return speed;};
-		int getrpm();
 		
 	};
 

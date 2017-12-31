@@ -8,85 +8,87 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "Motor.h"
-#include "uart.h"
 #include "drive.h"
 #include "encoder.h"
+#include "uart.h"
 #include "pid.h"
-
-char rcvdata;
-
-
-encoder e1,e2,e3,e4;
+#include "zonedrive.h"
+/////////////	Objects //////////////////
+encoder encoderX,encoderY,e1,e2,e3,e4;
 Motor m1(1) , m2(2) , m3(3) , m4(4);
-
-
-
+extern bodyPid encoderx,encodery;
+/////////////////////////////////////////
+char rcvdata;
 int main(void)
 {
+	INPUT(SHUTTLECOCKPIN);
+	INPUT(ZONEPIN);
+	SET(SHUTTLECOCKPIN);
+	SET(ZONEPIN);
 	sei();
 	initUART0();
 	initUART2();
 	initUART3();
     while (1) 
-    {
-		
-		SETPOINT1 = -4;
-		SETPOINT2 = -4;
-		SETPOINT3 = -4;
-		SETPOINT4 = -4;
-		
-		//if(rcvdata == 'w')
-			//mov(0);
-		//if(rcvdata == 'a')
-			//mov(90);
-		//if(rcvdata == 's')
-			//mov(180);
-		//if(rcvdata == 'd')
-			//mov(270);
-		//else if (rcvdata == 'f')
-		//{
-			//UART2TransmitString("stop signal \r\n");
-			//SETPOINT1 = 0;
-			//SETPOINT2 = 0;
-			//SETPOINT3 = 0;
-			//SETPOINT4 = 0;
-		//}
-		//
-		//
-			//if(rcvdata == '1')
-				//incrkp();
-			//if(rcvdata == '2')
-				//dcrkp();
-			//if (rcvdata == '3')
-				//incrki();
-			//if(rcvdata == '4')
-				//dcrki();
-			//if(rcvdata == '5')
-				//incrkd();
-			//if (rcvdata == '6')
-				//dcrkd();
-	//
-		//UART2TransmitString("kp = ");UART2TransmitData(kp*100);UART2TransmitString("\t");		//for mobile bluetooth
-		//UART2TransmitString("ki = ");UART2TransmitData(ki*100);UART2TransmitString("\t");
-		//UART2TransmitString("kd = ");UART2TransmitData(kd*100);UART2TransmitString("\t");
-		//UART2TransmitString("\r\n");
-		//
-		//UART3TransmitData(e2.getspeed());										//for serial plotter
-		//UART3TransmitString(" ");
-		//UART3TransmitData(SETPOINT2);
-		//UART3TransmitString("\r\n");	
+    {	
+		rcvdata = UART3Receive();
+		if(rcvdata == 'p')	incrkpp();
+		else if(rcvdata == 'o')	dcrkpp();
+		else if(rcvdata == 'i')	incrkii();
+		else if(rcvdata == 'd')	incrkdd();
+		else if(rcvdata == 'u')	dcrkii();
+		else if(rcvdata == 's')	dcrkdd();
+		gorockthegamefield();
 		computePid();
+		if(where == inTZ3)	return 0;
 		
-		/////////////////////////////////////////////CHECK ENCODER///////////////////////////////
-		UART0TransmitData(e1.getspeed());UART0TransmitString("\t");
-		UART0TransmitData(e2.getspeed());UART0TransmitString("\t");
-		UART0TransmitData(e3.getspeed());UART0TransmitString("\t");
-		UART0TransmitData(e4.getspeed());UART0TransmitString("\t");
-		UART0TransmitString("\r\n");
-		/////////////////////////////////////////////////////////////////////////////////////////
+		UART2TransmitData(encoderX.getdistance());
+		UART2TransmitString("\t");
+		UART2TransmitData(encoderx.SETPOINT);
+		//UART2TransmitString("\t");
+		UART3TransmitData(kpp*100);
+		UART3TransmitString("\t");
+		UART3TransmitData(kii * 100);
+		UART3TransmitString("\t");
+		UART3TransmitData(kdd * 100);
+		//UART0TransmitData();
+		UART3TransmitString("\t");
+		//UART0TransmitData(velocity_motor[3]);
+		//UART0TransmitString("\t");
+		UART2TransmitString("\r\n");
+		UART3TransmitString("\r\n");
     }
 }
 
-
+//void throwingzone1()
+//{
+	//if(flag)
+	//{
+		//movx(4500,Back);
+		//computePid();
+		//if(abs(encoderX.getdistance()) >= 4500){
+			//flag = false;
+			//stopDrive();
+			//movy(3000,Front);
+			//_delay_ms(2000);
+			//UART0TransmitString("it stoopped \n");
+			//encoderX.distance = 0;
+			//encoderX.resetCount();
+			//encoderY.distance = 0;
+			//encoderY.resetCount();
+			//
+		//}
+	//}
+	//else
+	//{
+		//movy(3000,Back);
+		//computePid();
+		//if(abs(encoderY.getdistance()) >= 3000)
+		//{
+			//stopDrive();
+		//}
+	//}
+//}
 

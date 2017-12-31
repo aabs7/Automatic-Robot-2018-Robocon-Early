@@ -28,15 +28,15 @@
     <eraseonlaunchrule>0</eraseonlaunchrule>
     <AsfFrameworkConfig>
       <framework-data>
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.22.0" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.22.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
     <ResetRule>0</ResetRule>
     <EraseKey />
@@ -164,6 +164,9 @@
     <Compile Include="encoder.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Flags.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="headers.h">
       <SubType>compile</SubType>
     </Compile>
@@ -183,6 +186,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="uart.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="zonedrive.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

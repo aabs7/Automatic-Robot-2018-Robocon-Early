@@ -13,10 +13,12 @@
 #include "encoder.h"
 #include "uart.h"
 #include "drive.h"
+#include "Flags.h"
 
+/////////////////////////////////////////////////
 extern Motor m1,m2,m3,m4;
 extern encoder e1,e2,e3,e4;
-
+////////////////////////////////////////////////
 double kp = 0.89  , ki , kd = 8.2 ; //0.89 -> p and 8.2 -> d
 
 struct pid
@@ -53,8 +55,6 @@ pid ma,mb,mc,md;
 void setTuningsM1(void)
 {
 	ma.input = e1.getspeed();
-	//UART0TransmitData(ma.input);
-	//UART0TransmitString("\t");
 	
 		ma.error = SETPOINT1 - ma.input;
 	
@@ -73,16 +73,10 @@ void setTuningsM1(void)
 		}
 		m1.SetOcrValue(ma.MOTOR_OCR_VALUE);
 	
-	//
-	//UART0TransmitData(ma.MOTOR_OCR_VALUE);
-	//UART0TransmitString("\t");
 }
 void setTuningsM2(void)
 {
 	mb.input = e2.getspeed();
-	//UART0TransmitData(mb.input);
-	//UART0TransmitString("\t");
-	
 		mb.error = SETPOINT2 - mb.input;
 
 		mb.Iterm += ki * mb.error;
@@ -99,17 +93,13 @@ void setTuningsM2(void)
 				mb.MOTOR_OCR_VALUE = -ICR_TOP;
 		}
 		m2.SetOcrValue(mb.MOTOR_OCR_VALUE);
-	
-	//UART0TransmitData(mb.MOTOR_OCR_VALUE);
-	//UART0TransmitString("\t");
+
 }
 
 void setTuningsM3(void)
 {
 	mc.input = e3.getspeed();
-	//UART0TransmitData(mc.input);
-	//UART0TransmitString("\t");
-	
+
 		mc.error = SETPOINT3 - mc.input;
 		mc.Iterm += ki * mc.error;
 	
@@ -126,16 +116,12 @@ void setTuningsM3(void)
 		}
 		m3.SetOcrValue(mc.MOTOR_OCR_VALUE);
 	
-	
-	//UART0TransmitData(mc.MOTOR_OCR_VALUE);
-	//UART0TransmitString("\t");
 }
 void setTuningsM4(void)
 {
 	
 	md.input = e4.getspeed();
-	//UART0TransmitData(md.input);
-	//UART0TransmitString("\t");
+
 	
 		md.error = SETPOINT4 - md.input;
 		md.Iterm += ki * md.error;
@@ -152,17 +138,45 @@ void setTuningsM4(void)
 				md.MOTOR_OCR_VALUE = -ICR_TOP;
 		}
 		m4.SetOcrValue(md.MOTOR_OCR_VALUE);
-	
-	//UART0TransmitData(md.MOTOR_OCR_VALUE);
-	//UART0TransmitString("\t\n");
+
 }
 
 void computePid()
 {
-	setTuningsM1();
-	setTuningsM2();
-	setTuningsM3();
-	setTuningsM4();
+	if(MotorPidFlag){
+		setTuningsM1();
+		setTuningsM2();
+		setTuningsM3();
+		setTuningsM4();
+	}
+	else{
+		m1.SetOcrValue(velocity_motor[0]);
+		m2.SetOcrValue(velocity_motor[1]);
+		m3.SetOcrValue(velocity_motor[2]);
+		m4.SetOcrValue(velocity_motor[3]);
+	}
+}
+
+void stopDrive()
+{
+	m1.StopMotor();
+	m2.StopMotor();
+	m3.StopMotor();
+	m4.StopMotor();
+	SETPOINT1 = SETPOINT2 = SETPOINT3 = SETPOINT4 = 0;
+	ma.MOTOR_OCR_VALUE = 0;
+	mb.MOTOR_OCR_VALUE = 0;
+	mc.MOTOR_OCR_VALUE = 0;
+	md.MOTOR_OCR_VALUE = 0;
+	ma.Iterm = 0;
+	mb.Iterm = 0;
+	mc.Iterm = 0;
+	md.Iterm = 0;
+	ma.previnput = 0;
+	mb.previnput = 0;
+	mc.previnput = 0;
+	md.previnput = 0;
+	UART0TransmitString("message print\r\n");
 }
 
 inline void incrkp(){

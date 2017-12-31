@@ -24,7 +24,6 @@
 #define CLEAR(x)	CLEAR2(x)
 #define SET(x)		SET2(x)
 
-
 #include <avr/io.h>
 
 #endif /* HEADERS_H_ */

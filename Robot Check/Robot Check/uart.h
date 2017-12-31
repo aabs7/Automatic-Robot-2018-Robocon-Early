@@ -13,7 +13,7 @@
 #define F_CPU 16000000UL
 #endif
 
-#define BAUD_RATE3 38400
+#define BAUD_RATE3 9600
 #define MYUBRR3 F_CPU/16/BAUD_RATE3-1
 
 #define BAUD_RATE2 38400
@@ -28,11 +28,13 @@
 #define TIMEOUT 10
 #define START_BYTE 227
 
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <string.h>
 #include <stdlib.h>
+
 
 void initUART0(void);
 void UART0Transmit(unsigned char data);
