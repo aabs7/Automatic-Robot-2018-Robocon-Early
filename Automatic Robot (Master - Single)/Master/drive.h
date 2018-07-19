@@ -705,6 +705,7 @@ void holdposition(){
 
 void movDegree(int degree)
 {
+	inverseKinematicsTrue = true;
 	int speed = 60;
 	int difference = 4700 - abs(encoderX.getdistance());
 	
