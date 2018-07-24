@@ -40,6 +40,7 @@ C_SRCS +=  \
 ../encoder.cpp \
 ../main.cpp \
 ../MPU6050.cpp \
+../retry.cpp \
 ../TWI.cpp \
 ../uart.cpp
 
@@ -54,6 +55,7 @@ OBJS +=  \
 encoder.o \
 main.o \
 MPU6050.o \
+retry.o \
 TWI.o \
 uart.o
 
@@ -61,6 +63,7 @@ OBJS_AS_ARGS +=  \
 encoder.o \
 main.o \
 MPU6050.o \
+retry.o \
 TWI.o \
 uart.o
 
@@ -68,6 +71,7 @@ C_DEPS +=  \
 encoder.d \
 main.d \
 MPU6050.d \
+retry.d \
 TWI.d \
 uart.d
 
@@ -75,6 +79,7 @@ C_DEPS_AS_ARGS +=  \
 encoder.d \
 main.d \
 MPU6050.d \
+retry.d \
 TWI.d \
 uart.d
 
@@ -92,6 +97,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

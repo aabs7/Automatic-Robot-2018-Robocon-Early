@@ -27,6 +27,7 @@
 #include "encoder.h"
 #include "Flags.h"
 #include "gy88.h"
+#include "retry.h"
 #include <util/delay.h>
 #include <math.h>
 
@@ -37,8 +38,8 @@ unsigned long startTime;
 
 
 /*****************************Limit switch pins*************************/
-#define RIGHT_LIMIT_SW F,1
-#define LEFT_LIMIT_SW F,2
+#define RIGHT_LIMIT_SW H,3
+#define LEFT_LIMIT_SW E,3
 unsigned long time_of_limit_switches_pressed = 0;
 bool first_data_time_of_limit_switches_pressed = true;
 /********************************************************************/
@@ -192,6 +193,7 @@ void initializeAll()
 		compass.FirstData = false;
 		compass.SETPOINT = initialCompassAngle;
 	}
+	checkRobotMotion();
 	
 }
 
@@ -434,7 +436,7 @@ void movx(int distance_setpoint, int direction, unsigned int speed){
 	
 	}
 	if(startingAtFront){			//if starting from start zone then push the fence
-		velocity_robot[1] = -10;
+		velocity_robot[1] = -20;
 	}
 	else{
 		velocity_robot[1] = 0;
@@ -557,7 +559,6 @@ void Calculate_Front_LinetrackerY_Pid(void)
 	else if(PidUpdateFlagLinetrackerBack && linetrackerPID){
 		FrontLinetrackerY_.input = Get_Front_LinetrackerY_Data();
 		//if linetracker input is not zero///
-		if(FrontLinetrackerY_.input != 0 && lineMeet){
 			//uart0_puts("calculating\n");
 			FrontLinetrackerY_.error = FrontLinetrackerY_.SETPOINT - FrontLinetrackerY_.input;
 			if((FrontLinetrackerY_.error) == 0)
@@ -579,8 +580,6 @@ void Calculate_Front_LinetrackerY_Pid(void)
 				else{FrontLinetrackerY_.output = -80;}
 			}
 
-		}
-
 		PidUpdateFlagLinetrackerFront = false;
 
 	}
@@ -599,7 +598,6 @@ void Calculate_Back_LinetrackerY_Pid(void)
 	if(PidUpdateFlagLinetrackerBack && linetrackerPID){
 		BackLinetrackerY_.input = Get_Back_LinetrackerY_Data();
 		//if linetracker input is not zero///
-		if(BackLinetrackerY_.input != 0 && lineMeet){
 			BackLinetrackerY_.error = BackLinetrackerY_.SETPOINT - BackLinetrackerY_.input;
 			if((BackLinetrackerY_.error) == 0)
 			{
@@ -619,10 +617,8 @@ void Calculate_Back_LinetrackerY_Pid(void)
 				if (BackLinetrackerY_.output > 0){BackLinetrackerY_.output = 80;}
 				else{BackLinetrackerY_.output = -80;}
 			}
-		}
 
-		PidUpdateFlagLinetrackerBack
-		= false;
+		PidUpdateFlagLinetrackerBack = false;
 
 	}
 
@@ -662,7 +658,7 @@ void Move_Xaxis(int distance_setpoint, int direction, unsigned int speed){
 		movingyback = false;
 		driveX.input = distanceX;
 		PidUpdateFlagDriveX = false;
-		if(distanceX >= 200){
+		if(distanceX >= 1000){
 			driveX.error = driveX.SETPOINT - driveX.input;
 			driveX.Iterm += driveX.ki * driveX.error;
 			if(driveX.FirstData){
@@ -693,7 +689,12 @@ void Move_Xaxis(int distance_setpoint, int direction, unsigned int speed){
 		}
 		////////////////////////////////////////////////////
 		else{
-			driveX.output = 60 + 0.45*distanceX;
+			if(startingAtFront){	//if starting from front, use this function to ramp up
+				velocity_robot[0] = 60 + 0.1*distanceX;
+			}
+			else{					//if going from loading zone 1 to loading zone 2 use this to ramp up
+				velocity_robot[0] = 60 + 0.04 * distanceX;
+			}
 		}
 	}
 	//

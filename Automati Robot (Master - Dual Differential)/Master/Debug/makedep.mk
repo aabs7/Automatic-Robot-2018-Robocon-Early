@@ -8,6 +8,8 @@ main.cpp
 
 MPU6050.cpp
 
+retry.cpp
+
 TWI.cpp
 
 uart.cpp

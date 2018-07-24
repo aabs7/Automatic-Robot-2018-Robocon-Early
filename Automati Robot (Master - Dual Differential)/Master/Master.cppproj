@@ -191,6 +191,12 @@
     <Compile Include="MPU6050_res_define.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="retry.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="retry.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="TWI.cpp">
       <SubType>compile</SubType>
     </Compile>

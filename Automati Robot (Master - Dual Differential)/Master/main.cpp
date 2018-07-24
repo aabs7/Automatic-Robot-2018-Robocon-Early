@@ -45,52 +45,19 @@ int main(void)
 	/// INITIALIZE ALL THE UART
 	uart0_init(UART_BAUD_SELECT(9600,F_CPU));
 	uart2_init(UART_BAUD_SELECT(38400,F_CPU));
-	uart3_init(UART_BAUD_SELECT(38400,F_CPU));
+	uart3_init(UART_BAUD_SELECT(9600,F_CPU));
 	//INITIALIZE EVERYTHING ELSE
 	initializeAll();
 	
-// 	task1 = task2 = task3 = task4 = task5 = task6 = task7 =true;
-// 	ManualInFrontOfLZ2 = false;
-// 	where = inLZ2;
-// 	robotState = notmoving;
-	//ShuttleCockGiven = ShuttleCockArmGone = true;
 	char rcvdata = 't';
 	sei();
     while (1) 
     {
-		
-// 		rcvdata = uart0_getc();
-// 		uart3_putc(rcvdata);
-	//	uart0_putc(rcvdata);
-
  		gorockthegamefield();
-// 		
-// 		reactConditionOfLineLeftFront();
-// 		reactConditionOfLineLeftBack();
-// 		
-// 		
+	
  		calculatevel();
 	}
 }
-
-
-///////////////copy this code and run.//////////////
-////get linetracker data
-//lineTrackerData = getLineTrackerYdata();
-////get compass data
-//compass_Angle = get_Angle();
-////Check the junction of Y linetracker
-//checkJunctionOfY();
-////call the gameplay function
-//changeCompassSetpoint();
-//gorockthegamefield();
-////check for line left condition and react to it
-//reactConditionOfLineLeft();
-////calculate velocity of each motor and send to slave
-//calculatevel();
-////set previous line tracker data
-//previousLinetrackerData = linetracker_data;
-////////not below this line///////////////////////
 
 
 ////////For calibration of compass//////////

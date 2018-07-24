@@ -14,18 +14,21 @@
 #include "encoder.h"
 #include "headers.h"
 #include "Flags.h"
+#include "retry.h"
 
 #define SHUTTLECOCK_STATUSPORT		PINL
-#define SHUTTLECOCK_STATUSPIN		PINL4	
+#define SHUTTLECOCK_STATUSPIN		PINL6	
 #define ZONE_STATUSPORT				PINL
-#define ZONE_STATUSPIN				PINL6
-#define RACK_STATUSPORT				PINF
-#define RACK_STATUSPIN				PINF5
+#define ZONE_STATUSPIN				PINL4
+#define RACK_STATUSPORT				PINL
 
-#define SHUTTLECOCKPIN				L,4
+
+#define RACK_STATUSPIN				PINL2
+
+#define SHUTTLECOCKPIN				L,6
 //zone pin suggests IR pin which detects manual robot is in front of automatic robot or not 
-#define ZONEPIN						L,6	
-#define RACKPIN						F,5
+#define ZONEPIN						L,4
+#define RACKPIN						L,2
 
 
 /////////////////////////////////////////
@@ -53,6 +56,7 @@ bool sendoncetorotateGeneva = true;
 bool check_stable_robot = false;
 
 ////////////////////////////////////////
+
 /*these variable says where the robot is right now
 and 'moving' and 'notmoving' are locomotive state of robot*/
 enum {
@@ -75,7 +79,7 @@ struct coordinates{
 	};
 
 const struct coordinates Throwingzone1 = {4600,1900};	//4700 -x 1900 -y
-const struct coordinates Throwingzone2 = {6600,1900}; 
+const struct coordinates Throwingzone2 = {6800,1900}; 
 const struct coordinates Throwingzone3 = {6500,5200};
 
 /////////////////////////////////////////
@@ -109,6 +113,14 @@ bool task8 = false;
 bool task9 = false;
 bool xJunctionMeetFromTZ2 = false;
 
+extern bool mainSwitchOn;
+extern bool directlyLZ2;
+extern bool directlyTZ3;
+extern bool LZ2ForTZ3;
+extern bool alwaysTZ2;
+extern bool alwaysTZ1;
+extern bool normalGame;
+
 //////////////////////////
 void updateZoneflag();
 
@@ -126,6 +138,8 @@ void gorockthegamefield(void)
 // 			if(task6){uart0_puts("6");}
 // 				if(task7){uart0_puts("7");}
 // 				if(task8){uart0_puts("8");}
+	
+	
 
 	if((where == inLZ1 || where == inLZ2) && robotState == notmoving){
 		
@@ -133,12 +147,10 @@ void gorockthegamefield(void)
 		but yet to complete task5*/ 
 		if(task4 && !task5){
 			/*if there is no manual robot infront of automatic robot*/
-			if((ZONE_STATUSPORT & (1<<ZONE_STATUSPIN))){
+			if((ZONE_STATUSPORT & (1<<ZONE_STATUSPIN)) && !alwaysTZ1){
 				/*go directly to loading zone 2 and manual robot is waiting there*/
 				where = inLZ1;
 				gotoLZ2 = true;
-				FlagChangeSetpointCompass = false;
-				FlagInitialAngleSetpoint = false;
 				ShuttleCockGiven = true;	
 				ShuttleCockArmGone = true;
 			}
@@ -154,7 +166,7 @@ void gorockthegamefield(void)
 			}	
 		}
 		else if(task6 && task7 ){
-			if((ZONE_STATUSPORT & (1<< ZONE_STATUSPIN))){
+			if((ZONE_STATUSPORT & (1<< ZONE_STATUSPIN)) && !alwaysTZ2){
 				where = inLZ2;
 				ManualInFrontOfLZ2 = false;
 				updateZoneflag();
@@ -179,7 +191,7 @@ void gorockthegamefield(void)
 	
 	
 	////move from start zone to corner of loading zone
-	if(!task1 && where == inStart_point){	
+	if(!task1 && where == inStart_point && (normalGame||alwaysTZ1)){	
 		compass.setPid(2.0,0,30);
 		//uart0_puts("hello\r\n");
 		//movx(Throwingzone1.x,Front,STARTZONEtoCORNER);
@@ -191,6 +203,14 @@ void gorockthegamefield(void)
 			//uart0_puts("int on");
 		}
 
+	}
+	else if((directlyLZ2 || directlyTZ3 || LZ2ForTZ3 || alwaysTZ2) && !task1){
+		movx((Throwingzone2.x),Front,STARTZONEtoCORNER);
+		robotState = moving;
+		if(abs(encoderX.getdistance()) >= 6600){
+			uart0_puts("interrupt on\t");
+			linetrackerXjunctionWatch();
+		}
 	}
 	
 	///move from corner to loading zone1 if task1 is completed and task2 not completed
@@ -207,7 +227,7 @@ void gorockthegamefield(void)
 		//movYForwardSlow(CORNERtoLZ1);
 	}
 	/*if task2 is completed and robot just reached loading zone 1*/
-	else if(task1 && task2 && where == inFirstloadingCorner && (robotState == moving)){
+	else if(task1 && task2 && where == inFirstloadingCorner && (robotState == moving) && (normalGame||alwaysTZ1)){
 		where = inLZ1;
 		uart3_putc('h');
 		//uart0_puts("in loading zone 1\r\n");
@@ -219,7 +239,33 @@ void gorockthegamefield(void)
 		encoderX.resetCount();
 		encoderY.resetCount();
 	}
-	
+	else if(where == inFirstloadingCorner && task2 && (directlyLZ2 || directlyTZ3 || LZ2ForTZ3 || alwaysTZ2) && robotState == moving){
+		linetrackerYjunctionWatchOff();
+		startingAtFront = false;
+		where = inLZ2;
+		robotState = notmoving;
+		BrakeMotor();
+		encoderX.resetCount();
+		encoderY.resetCount();
+		if(directlyLZ2){
+			task1 = task2 = task3 = task4 = task5 = true;
+			ManualInFrontOfLZ2 = true;
+		}
+		else if(directlyTZ3){
+			task1 = task2 = task3 = task4 = task5 = task6 = task7 = true;
+			ShuttleCockArmGone = true;
+			ShuttleCockGiven = true;
+			GoThrowingZone3 = true;
+		}
+		else if(LZ2ForTZ3){
+			task1 = task2 = task3 = task4 = task5 = task6 = task7 = true;
+			ManualInFrontOfLZ2 = false;
+		}
+		else if(alwaysTZ2){
+			task1 = task2 = task3 = task4 = task5 = true;
+			ManualInFrontOfLZ2 = true;
+		}
+	}
 	/*if Shuttlecock is given*/
 	if(ShuttleCockGiven && ShuttleCockArmGone)
 	{
@@ -529,7 +575,7 @@ void updateZoneflag(void){
 	i.e if manual robot arm is extended to give shuttlecock*/
 	if(!ShuttleCockGiven){
 		//uart0_puts("entered above \r\n");
-		if(!(PINL & (1<<PL4)) &&  where == inLZ1 ){
+		if(!(PINL & (1<<PL6)) &&  where == inLZ1 ){
 			//uart0_puts("Shuttlecock given in LZ1\r\n");
 			//'w' is sent to throwing mechanism to grip shuttlecock
 			uart3_putc('o');
@@ -559,7 +605,7 @@ void updateZoneflag(void){
 	}
 	//if shuttlecock given and arm is gone send 'w' to throwing mechanism to give to gripper
 	//and move robot
-	if(ShuttleCockGiven && (PINL & (1<<PL4)) &&  (where == inLZ1 || where == inLZ2) ){
+	if(ShuttleCockGiven && (PINL & (1<<PL6)) &&  (where == inLZ1 || where == inLZ2) ){
 		//uart0_puts("Shuttlecock arm gone \r\n");
 		ShuttleCockArmGone = true;
 		uart3_putc('w');
@@ -568,7 +614,7 @@ void updateZoneflag(void){
 	/*if low on golden rack pin then rack is received
 	i.e if rack is received above geneva and robot is in loading zone 2*/
 	if(!ShuttleCockGiven || !GoldenRackGiven){
-		if(sendoncetorotateGeneva && !(PINL & (1<<PL4)) && !((RACK_STATUSPORT & (1<<RACK_STATUSPIN))) && !ManualInFrontOfLZ2 && where == inLZ2){
+		if(sendoncetorotateGeneva && !(PINL & (1<<PL6)) && !((RACK_STATUSPORT & (1<<RACK_STATUSPIN))) && !ManualInFrontOfLZ2 && where == inLZ2){
 			uart3_putc('k');
 			sendoncetorotateGeneva = false;
 		}
