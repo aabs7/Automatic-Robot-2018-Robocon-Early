@@ -2,7 +2,7 @@
  * drive.h
  *
  * Created: 10/23/2017 3:16:43 PM
- *  Author: abheesh
+ *  Author: Abheesh Khanal, Prakash Chaudhary
  */ 
 
 
@@ -153,6 +153,8 @@ inline void linetrackerYjunctionWatchOff();
 //16th july - Dual Differential Drive
 int8_t _direction_matrix[5][4] = {{-1, -1, 1, 1}, {1, 1, -1, -1}, {1, -1, -1, 1}, {-1, 1, 1, -1}, {0, 0, 0, 0}};
 uint8_t _axis = 7, _direction = 7;
+bool _front_linetracker_left_edge_left = false, _front_linetracker_right_edge_left = false;
+bool _back_linetracker_left_edge_left = false, _back_linetracker_right_edge_left = false;
 uint8_t _previous_data_of_front_linetracker = 35, _previous_data_of_back_linetracker = 45;
 bodyPid FrontLinetrackerY_, BackLinetrackerY_;
 
@@ -441,8 +443,8 @@ void movx(int distance_setpoint, int direction, unsigned int speed){
 	else{
 		velocity_robot[1] = 0;
 	}
-	//velocity_robot[2] = 0;
-	calculateCompassPID();
+	velocity_robot[2] = 0;
+	//calculateCompassPID();
 }
 
 void movYForwardSlow(unsigned int speed){
@@ -480,7 +482,8 @@ void movDegree(int degree)
 
 	velocity_robot[0] = (speed * float(cos(degree * DEG_TO_RAD)));
 	velocity_robot[1] = (speed * float(sin(degree * DEG_TO_RAD)));
-	calculateCompassPID();
+	velocity_robot[2] = 0;
+	//calculateCompassPID();
 	
 }
 
@@ -496,21 +499,39 @@ uint8_t Get_Front_LinetrackerY_Data(void)
 	}
 	else
 	{
+		if (_previous_data_of_front_linetracker == 10 && data == 0)
+		{
+			_front_linetracker_left_edge_left = false;
+		}
+		
+		if (_previous_data_of_front_linetracker == 80 && data == 70)
+		{
+			_front_linetracker_right_edge_left = false;
+		}
+		
 		if (_previous_data_of_front_linetracker == 10 && data > 100)
 		{
 			data = 0;
 			_previous_data_of_front_linetracker = 10;
+			_front_linetracker_left_edge_left = true;
+			
 		}
 		else if (_previous_data_of_front_linetracker == 80 && data > 100)
 		{
 			data = 90;
 			_previous_data_of_front_linetracker = 80;
+			_front_linetracker_right_edge_left = true;
 		}
-		else
+		else if (!_front_linetracker_left_edge_left && !_front_linetracker_right_edge_left)
 		{
 			data = data + 10;
 			_previous_data_of_front_linetracker = data;
 		}
+		else
+		{
+			data = data + 10;
+		}
+		
 	}
 	
 	return(data);
@@ -533,17 +554,30 @@ uint8_t Get_Back_LinetrackerY_Data(void)
 		totalSum = 0;
 		totalLine = 0;
 		
+		if (_previous_data_of_back_linetracker == 10 && linetracker_data == 10)
+		{
+			_back_linetracker_left_edge_left = false;			
+		}
+		
+		if (_previous_data_of_back_linetracker == 80 && linetracker_data == 80)
+		{
+			_back_linetracker_right_edge_left = false;
+		}
+		
 		if (_previous_data_of_back_linetracker == 10 && linetracker_data == 0)
 		{
 			linetracker_data = 0;
 			_previous_data_of_back_linetracker = 10;
+			_back_linetracker_left_edge_left = true;
+			
 		}
 		else if (_previous_data_of_back_linetracker == 80 && linetracker_data == 0)
 		{
 			linetracker_data = 90;
 			_previous_data_of_back_linetracker = 80;
+			_back_linetracker_right_edge_left = true;
 		}
-		else
+		else if (!_back_linetracker_left_edge_left && !_back_linetracker_right_edge_left)
 		{
 			_previous_data_of_back_linetracker = linetracker_data;
 		}
