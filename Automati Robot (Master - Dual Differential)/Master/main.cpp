@@ -45,39 +45,18 @@ int main(void)
 	/// INITIALIZE ALL THE UART
 	uart0_init(UART_BAUD_SELECT(9600,F_CPU));
 	uart2_init(UART_BAUD_SELECT(38400,F_CPU));
-	uart3_init(UART_BAUD_SELECT(9600,F_CPU));
+	uart3_init(UART_BAUD_SELECT(38400,F_CPU));
 	//INITIALIZE EVERYTHING ELSE
 	initializeAll();
 	
 	char rcvdata = 't';
 	sei();
+	
     while (1) 
     {
- 		gorockthegamefield();
-	
+		
+		gorockthegamefield();
  		calculatevel();
 	}
 }
-
-
-////////For calibration of compass//////////
-//  			if(calibrate){
-// 				 velocity_robot[0] = 0;
-// 				 velocity_robot[1] = 0;
-// 				 velocity_robot[2] = 60;
-// 				 calculatevel();
-// 				 calibrate_compass();
-// 				 calibrate = false;
-// 			 }
-// 			 else{
-// 				 velocity_robot[0] = 0;
-// 				 velocity_robot[1] = 0;
-// 				 velocity_robot[2] = 0;
-// 				 calculatevel();
-// 				 uart0_putint(X_offset);
-// 				 uart0_puts("\t");
-// 				 uart0_putint(Y_offset);
-// 				 uart0_puts("\n");
-// 			 }
-
 
